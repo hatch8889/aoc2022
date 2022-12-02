@@ -10,7 +10,6 @@ def calc(inputs):
 
     print(sorted(all_sums)[-3:])
     print(sum(sorted(all_sums)[-3:]))
-    print('\n')
 
 
 def main():
