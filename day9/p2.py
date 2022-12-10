@@ -1,5 +1,6 @@
 import math
 import pygame
+import time
 
 visited = set([(0, 0)])
 screen: pygame.Surface
@@ -8,8 +9,8 @@ rope = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), (0, 0), 
 
 
 def rc(c: tuple[int, int]) -> pygame.rect:
-    h = 5
-    return pygame.Rect(h*c[0] + 200, h*c[1] + 700, h, h)
+    h = 3
+    return pygame.Rect(h*c[0] + 200, h*c[1] + 900, h, h)
 
 
 def draw_scene():
@@ -27,6 +28,7 @@ def draw_scene():
         pygame.draw.rect(screen, (255, int(24*ii), 0), rc(x))
 
     pygame.display.flip()
+    time.sleep(0.01)
 
 
 def get_dist(h, t) -> float:
