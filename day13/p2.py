@@ -39,7 +39,7 @@ def compare(left, right):
 
 
 def cz(left, right):
-    return -1 if compare(left, right) is True else False
+    return -1 if compare(left, right) is True else 1
 
 
 def main():
