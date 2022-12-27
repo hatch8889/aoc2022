@@ -2,6 +2,7 @@ import heapq
 from math import lcm
 import pygame
 import time
+import functools
 
 
 class Game:
@@ -24,7 +25,7 @@ class Game:
         self.tornado_down = set()
         self.path = []
 
-        with open('test.txt') as data:
+        with open('data.txt') as data:
             lines = data.read().splitlines()
             for y in range(len(lines)):
                 if y > self.max_y:
@@ -84,6 +85,7 @@ class Game:
 
         return tornadoes
 
+    @functools.cache
     def get_possible_moves(self, pos: tuple[int, int], steps_taken: int):
         x, y = pos
         moves = [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1), (x, y)]
@@ -107,10 +109,9 @@ class Game:
         while queue:
             distance, current = heapq.heappop(queue)
             if current == end:
-                print(distance)
                 return distance + 1
 
-            possible_moves = self.get_possible_moves(current, distance)
+            possible_moves = self.get_possible_moves(current, distance % self.possible_moves)
             for move in possible_moves:
                 if move == end:
                     return distance
@@ -123,7 +124,6 @@ class Game:
                 visited.add((move, new_blizz))
                 heapq.heappush(queue, (new_distance, move))
 
-        print(visited)
         return -1
 
     def find_path(self):
