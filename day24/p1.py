@@ -1,13 +1,7 @@
 import heapq
-from collections import deque
+from math import lcm
 import pygame
 import time
-
-try_moves = [[(-1, -1), (0, -1), (1, -1)],
-             [(1, 1), (0, 1), (-1, 1)],
-             [(-1, 1), (-1, 0), (-1, -1)],
-             [(1, -1), (1, 0), (1, 1)]]
-adjacent = [(-1, -1), (0, -1), (1, -1), (1, 1), (0, 1), (-1, 1), (-1, 0), (1, 0)]
 
 
 class Game:
@@ -20,6 +14,7 @@ class Game:
     path: list
     max_x = 0
     max_y = 0
+    possible_moves = 0
 
     def __init__(self):
         self.edge = set()
@@ -35,8 +30,8 @@ class Game:
                 if y > self.max_y:
                     self.max_y = y
                 line = lines[y]
-                self.max_x = len(line)
-                for x in range(self.max_x):
+                self.max_x = len(line) - 1
+                for x in range(self.max_x + 1):
                     block = line[x]
                     p = (x, y)
                     if block == '#':
@@ -49,12 +44,12 @@ class Game:
                         self.tornado_up.add(p)
                     elif block == 'v':
                         self.tornado_down.add(p)
-        self.end = (self.max_x - 2, self.max_y)
+        self.end = (self.max_x - 1, self.max_y)
+        self.possible_moves = lcm((self.max_x - 1), (self.max_y - 1))
 
+    def init_game(self):
         pygame.init()
         self.screen = pygame.display.set_mode(size=(self.size * 130, self.size * 30))
-        self.draw()
-        self.wait_key()
 
     def rc(self, c: tuple[int, int]) -> pygame.rect:
         return pygame.Rect((self.size * c[0]), (self.size * c[1]), self.size, self.size)
@@ -79,13 +74,13 @@ class Game:
             tornadoes.append((((x - 1 - steps_taken) % xsiz) + 1, y))
         for t in self.tornado_right:
             x, y = t
-            tornadoes.append((((x + 1 + steps_taken) % xsiz) + 1, y))
+            tornadoes.append(((x + steps_taken - 1) % xsiz + 1, y))
         for t in self.tornado_up:
             x, y = t
             tornadoes.append((x, ((y - 1 - steps_taken) % ysiz) + 1))
         for t in self.tornado_down:
             x, y = t
-            tornadoes.append((x, ((y + 1 + steps_taken) % ysiz) + 1))
+            tornadoes.append((x, (y - 1 + steps_taken) % ysiz + 1))
 
         return tornadoes
 
@@ -95,44 +90,50 @@ class Game:
         tornadoes = self.get_tornadoes(steps_taken)
         filtered = []
         for m in moves:
-            if m[1] < 0:
+            if m[1] < 0 or m[1] > self.max_y:
                 continue
             if m in self.edge:
                 continue
             if m in tornadoes:
                 continue
             filtered.append(m)
+
         return filtered
 
-    def shortest_path(self, blizz=0):
+    def shortest_path(self, start: tuple, end: tuple, blizz=0):
         queue = []
-        heapq.heappush(queue, (0, self.start, blizz))
+        heapq.heappush(queue, (blizz, start))
         visited = set()
         while queue:
-            distance, current, blizz = heapq.heappop(queue)
-            if current == self.end:
+            distance, current = heapq.heappop(queue)
+            if current == end:
                 print(distance)
                 return distance + 1
 
             possible_moves = self.get_possible_moves(current, distance)
             for move in possible_moves:
-                if move == self.end:
-                    return + 1
+                if move == end:
+                    return distance
 
                 new_distance = distance + 1
-                if (move, new_distance) in visited:
+                new_blizz = new_distance % self.possible_moves
+                if (move, new_blizz) in visited:
                     continue
 
-                visited.add((move, new_distance % 3000))
-                heapq.heappush(queue, (new_distance, move, new_distance % 3000))
+                visited.add((move, new_blizz))
+                heapq.heappush(queue, (new_distance, move))
 
         print(visited)
         return -1
 
     def find_path(self):
-        x = self.shortest_path()
-        print(x)
-        #self.draw()
+        first_path = self.shortest_path(self.start, self.end)
+        print('part1: ', first_path)
+        second_path = self.shortest_path(self.end, self.start, first_path)
+        print('going back to start...', second_path)
+        third_path = self.shortest_path(self.start, self.end, second_path)
+        print('part2: ', third_path)
+
 
     def wait_key(self):
         while True:
@@ -148,7 +149,6 @@ class Game:
 def main():
     game = Game()
     game.find_path()
-    game.wait_key()
 
 if __name__ == '__main__':
     main()
